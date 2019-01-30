@@ -6,15 +6,17 @@ import axios from 'axios'
 export default class Slideshow extends Component {
 constructor(props) {
     super(props)
-    this.state = { sections: [] } ;
+    this.state = { sections: [], status: true } ;
   }
 
 componentWillMount() {
-
+	
 }
 
 componentDidMount() {
-    Reveal.initialize({})
+    Reveal.initialize({
+    	slideNumber: true
+    })
 
     function resetSlideScrolling(slide) {
     slide.classList.add('scrollable-slide');
@@ -35,12 +37,18 @@ componentDidMount() {
 	        resetSlideScrolling(event.previousSlide);
 	    }
 	    handleSlideScrolling(event.currentSlide);
-	});
+	});	
 
-	axios.get('https://jsonplaceholder.typicode.com/posts').then(res => {
-		const sections = res.data;
-		this.setState({ sections });
 
+	axios.get('https://dyvl2cyi55.execute-api.us-east-1.amazonaws.com/V1/get-bucket-contents').then(res => {
+		const sections = res.data.body;
+		this.setState({ sections: sections });
+	})
+
+	axios.get('https://dyvl2cyi55.execute-api.us-east-1.amazonaws.com/V1/check-pdf-status').then(res => {
+		const status = res.data.body;
+		console.log(res.data)
+		this.setState({status: status });
 	})
   }
 
@@ -50,12 +58,19 @@ initReveal(){
 
 render() {
 	const sections = [];
-    this.state.sections.map( section =>
+	console.log(this.state)
+	if (this.state.status == true){		
+    	this.state.sections.map( page_path =>
     	sections.push(<section>
-						<img className="pdfPage" src={require('./../pages/instructor_WB_2011_ESP-076.jpg')} alt="Up arrow" >
+						<img className="pdfPage" data-src={"http://lab-fisica-pdfs.s3.amazonaws.com/"+page_path} alt={page_path} >
 						</img>
 					</section>)
      	)
+	} else {
+		sections.push(<section>
+						<h1>Por el momento, la plataforma se encuentra deshabilitada.</h1>
+					</section>)     	
+	}
 
     return (	        	
 		<div className="slideshowContainer" >
